@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E60000" /> <!-- Vodafone Red -->
+      <stop offset="100%" stop-color="#0F62FE" /> <!-- IBM Blue -->
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <drop-shadow dx="0" dy="8" stdDeviation="8" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  
+  <!-- Rounded Background Card -->
+  <rect width="512" height="512" rx="128" fill="#161616" />
+  
+  <g filter="url(#shadow)" transform="translate(256, 256) scale(0.85)">
+    <!-- Shield Outline -->
+    <path d="M-150,-200 C-150,-200 0,-250 0,-250 C0,-250 150,-200 150,-200 C150,-200 180,50 0,250 C-180,50 -150,-200 -150,-200 Z" 
+          fill="url(#brandGrad)" />
+          
+    <path d="M-130,-180 C-130,-180 0,-225 0,-225 C0,-225 130,-180 130,-180 C130,-180 156,40 0,215 C-156,40 -130,-180 -130,-180 Z" 
+          fill="#161616" />
+          
+    <!-- Inner glowing elements (Lightbulb + AI Nodes) -->
+    <!-- Bulb Base -->
+    <path d="M-40,80 L40,80 L30,110 L-30,110 Z" fill="#ffffff" opacity="0.9" />
+    <rect x="-20" y="118" width="40" height="8" rx="4" fill="#E60000" />
+    
+    <!-- Bulb Glass -->
+    <path d="M0,-80 C-60,-80 -70,20 -30,60 L30,60 C70,20 60,-80 0,-80 Z" 
+          fill="#ffffff" opacity="0.9" />
+          
+    <!-- Inner Filaments representing AI connections -->
+    <circle cx="0" cy="-20" r="10" fill="#0F62FE" />
+    <line x1="0" y1="-20" x2="-35" y2="15" stroke="#0F62FE" stroke-width="6" />
+    <line x1="0" y1="-20" x2="35" y2="15" stroke="#0F62FE" stroke-width="6" />
+    <line x1="0" y1="-20" x2="0" y2="-60" stroke="#E60000" stroke-width="6" />
+    <circle cx="-35" cy="15" r="12" fill="#E60000" />
+    <circle cx="35" cy="15" r="12" fill="#E60000" />
+    <circle cx="0" cy="-60" r="12" fill="#E60000" />
+    
+    <path d="M-15,-20 L15,-20 Q0,-45 -15,-20 Z" fill="#E60000" opacity="0.8" />
+  </g>
+</svg>

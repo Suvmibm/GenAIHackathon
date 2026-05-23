@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 630">
+  <!-- V left stroke -->
+  <polygon points="15,10 175,10 215,430 200,430" fill="#e21a22"/>
+  <!-- V right stroke -->
+  <polygon points="415,10 255,10 200,430 215,430" fill="#e21a22"/>
+  <!-- i stem -->
+  <rect x="460" y="10" width="130" height="420" fill="#e21a22"/>
+  <!-- yellow dot under i -->
+  <circle cx="525" cy="538" r="78" fill="#FFCC00"/>
+</svg>
