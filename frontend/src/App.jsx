@@ -205,12 +205,12 @@ export default function App() {
     }));
   };
 
-  const handleResetForm = () => {
+  const handleResetForm = (clearAlert = true) => {
     setSelectedHouse('');
     setSelectedTeam('');
     setScores({});
     setComments('');
-    setAlert(null);
+    if (clearAlert) setAlert(null);
   };
 
   // Sync Indexed Offline Queue with Server
@@ -294,7 +294,7 @@ export default function App() {
         type: 'success', 
         message: 'Saved Offline! Evaluation queued securely. It will be uploaded automatically once connection is active.' 
       });
-      handleResetForm();
+      handleResetForm(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -312,7 +312,7 @@ export default function App() {
 
       if (res.ok) {
         setAlert({ type: 'success', message: 'Success! Evaluation uploaded and registered instantly.' });
-        handleResetForm();
+        handleResetForm(false);
         fetchLeaderboard();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
@@ -327,7 +327,7 @@ export default function App() {
       setOfflineQueue(updatedQueue);
       localStorage.setItem('offline_scores_queue', JSON.stringify(updatedQueue));
       setAlert({ type: 'info', message: 'Connection interrupted. Saved evaluation in local queue for auto-sync.' });
-      handleResetForm();
+      handleResetForm(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
