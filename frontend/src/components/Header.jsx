@@ -11,18 +11,8 @@ export default function Header({ onInstall, showInstall }) {
 
       {/* Center Hackathon Branding */}
       <div className="brand-text">
-        <h1 className="tech-center-title">
-          <span className="text-red">GenAI</span>
-          <span className="text-dark">HACKATHON</span>
-          {/* Small decorative circuit icon after the title */}
-          <svg width="16" height="26" viewBox="0 0 16 26" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '3px', flexShrink: 0 }}>
-            <line x1="8" y1="0" x2="8" y2="26" stroke="#e21a22" strokeWidth="2" strokeLinecap="round"/>
-            <line x1="2" y1="7" x2="14" y2="7" stroke="#e21a22" strokeWidth="2" strokeLinecap="round"/>
-            <circle cx="2" cy="7" r="2" fill="#e21a22"/>
-            <circle cx="14" cy="7" r="2" fill="#e21a22"/>
-            <circle cx="8" cy="0" r="2" fill="#e21a22"/>
-            <circle cx="8" cy="26" r="2" fill="#e21a22"/>
-          </svg>
+        <h1 className="tech-center-title" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <img src="/icons/logo%201.png" alt="GenAI Hackathon" style={{ height: '36px', width: 'auto' }} />
         </h1>
         <p className="tech-subtitle">Powered by <strong>IBM Consulting Advantage</strong></p>
       </div>
