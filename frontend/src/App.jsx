@@ -294,10 +294,10 @@ export default function App() {
       const updatedQueue = [...offlineQueue, submissionPayload];
       setOfflineQueue(updatedQueue);
       localStorage.setItem('offline_scores_queue', JSON.stringify(updatedQueue));
-      
-      setAlert({ 
-        type: 'success', 
-        message: 'Saved Offline! Evaluation queued securely. It will be uploaded automatically once connection is active.' 
+
+      setAlert({
+        type: 'success',
+        message: 'Saved Offline! Evaluation queued securely. It will be uploaded automatically once connection is active.'
       });
       resetFormFields();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -316,7 +316,7 @@ export default function App() {
       const data = await res.json();
 
       if (res.ok) {
-        setAlert({ type: 'success', message: 'Success! Evaluation uploaded and registered instantly.' });
+        setAlert({ type: 'success' });
         resetFormFields();
         fetchLeaderboard();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -346,7 +346,7 @@ export default function App() {
 
       {/* 2. Sync / Offline Warning banners */}
       <OfflineBanner isOffline={isOffline} queueLength={offlineQueue.length} />
-      
+
       {syncToast && (
         <div className="sync-toast">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 2s linear infinite' }}>
@@ -528,6 +528,13 @@ export default function App() {
               {alert.type === 'success' ? 'Score Submitted' : alert.type === 'error' ? 'Submission Failed' : 'Note'}
             </h3>
 
+            {/* Message */}
+            {alert.message && (
+              <p className="modal-message">
+                {alert.message}
+              </p>
+            )}
+
             {/* Action button */}
             <button className={`modal-action modal-action--${alert.type}`} onClick={() => setAlert(null)}>
               {alert.type === 'success' ? 'Done' : 'Dismiss'}
@@ -540,11 +547,11 @@ export default function App() {
       {/* 📥 Custom Visual PWA Installation Guide Modal */}
       {showInstallModal && (
         <div className="modal-overlay" onClick={() => setShowInstallModal(false)}>
-          <div 
-            className="modal-card" 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ 
-              maxWidth: '480px', 
+          <div
+            className="modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '480px',
               padding: '2.25rem 2rem',
               borderRadius: '24px',
               textAlign: 'left'
@@ -554,7 +561,7 @@ export default function App() {
               <h3 className="modal-title" style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800 }}>
                 Install Scoring App
               </h3>
-              <button 
+              <button
                 onClick={() => setShowInstallModal(false)}
                 style={{
                   background: 'none',
@@ -637,7 +644,7 @@ export default function App() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {[
                     { n: 1, text: <>Open this portal in <strong>Safari</strong> (not Chrome or Firefox).</> },
-                    { n: 2, text: <>Tap the <strong>Share button</strong> <span style={{ display: 'inline-flex', padding: '2px 4px', backgroundColor: '#f2f2f7', borderRadius: '4px', verticalAlign: 'middle' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg></span> in Safari's bottom toolbar.</> },
+                    { n: 2, text: <>Tap the <strong>Share button</strong> <span style={{ display: 'inline-flex', padding: '2px 4px', backgroundColor: '#f2f2f7', borderRadius: '4px', verticalAlign: 'middle' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" /></svg></span> in Safari's bottom toolbar.</> },
                     { n: 3, text: <>Scroll down and choose <strong>Add to Home Screen</strong>.</> },
                     { n: 4, text: <>Tap <strong>Add</strong> in the top-right corner.</> },
                   ].map(({ n, text }) => (
@@ -658,7 +665,7 @@ export default function App() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {[
                     { n: 1, text: <>Open this website in <strong>Google Chrome</strong>.</> },
-                    { n: 2, text: <>Tap the <strong>options menu</strong> <span style={{ display: 'inline-flex', padding: '2px 4px', backgroundColor: '#f2f2f7', borderRadius: '4px', verticalAlign: 'middle' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></span> at the top-right.</> },
+                    { n: 2, text: <>Tap the <strong>options menu</strong> <span style={{ display: 'inline-flex', padding: '2px 4px', backgroundColor: '#f2f2f7', borderRadius: '4px', verticalAlign: 'middle' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg></span> at the top-right.</> },
                     { n: 3, text: <>Select <strong>Add to Home Screen</strong> or <strong>Install App</strong>.</> },
                     { n: 4, text: <>Tap <strong>Install</strong> to confirm.</> },
                   ].map(({ n, text }) => (
@@ -671,8 +678,8 @@ export default function App() {
               </div>
             )}
 
-            <button 
-              className="modal-btn success" 
+            <button
+              className="modal-btn success"
               onClick={() => setShowInstallModal(false)}
               style={{ marginTop: '1.75rem', width: '100%' }}
             >
