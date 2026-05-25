@@ -205,12 +205,16 @@ export default function App() {
     }));
   };
 
-  const handleResetForm = (clearAlert = true) => {
+  const resetFormFields = () => {
     setSelectedHouse('');
     setSelectedTeam('');
     setScores({});
     setComments('');
-    if (clearAlert) setAlert(null);
+  };
+
+  const handleResetForm = () => {
+    setScores({});
+    setAlert(null);
   };
 
   // Sync Indexed Offline Queue with Server
@@ -294,7 +298,7 @@ export default function App() {
         type: 'success', 
         message: 'Saved Offline! Evaluation queued securely. It will be uploaded automatically once connection is active.' 
       });
-      handleResetForm(false);
+      resetFormFields();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -312,7 +316,7 @@ export default function App() {
 
       if (res.ok) {
         setAlert({ type: 'success', message: 'Success! Evaluation uploaded and registered instantly.' });
-        handleResetForm(false);
+        resetFormFields();
         fetchLeaderboard();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
@@ -327,7 +331,7 @@ export default function App() {
       setOfflineQueue(updatedQueue);
       localStorage.setItem('offline_scores_queue', JSON.stringify(updatedQueue));
       setAlert({ type: 'info', message: 'Connection interrupted. Saved evaluation in local queue for auto-sync.' });
-      handleResetForm(false);
+      resetFormFields();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
@@ -485,49 +489,66 @@ export default function App() {
         <p>© 2026 GenAI Hackathon. Authorized Jury Scoring Platform. Powered by IBM Consulting Advantage (ICA).</p>
       </footer>
 
-      {/* 🔮 Premium Visual Popup Modal */}
+      {/* Popup Modal */}
       {alert && (
         <div className="modal-overlay" onClick={() => setAlert(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            {/* Decorative top accent bar */}
-            <div className={`modal-accent-bar modal-accent-${alert.type}`} />
+          <div className={`modal-card modal-card--${alert.type}`} onClick={(e) => e.stopPropagation()}>
 
-            <div className={`modal-icon-wrapper ${alert.type}`}>
-              {alert.type === 'success' ? (
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
-              ) : alert.type === 'error' ? (
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="17" />
-                </svg>
-              ) : (
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="16" x2="12" y2="12" />
-                  <line x1="12" y1="8" x2="12.01" y2="8" />
-                </svg>
-              )}
-            </div>
-
-            <h3 className="modal-title">
-              {alert.type === 'success' ? '🎉 Score Submitted!' : alert.type === 'error' ? 'Submission Failed' : 'System Note'}
-            </h3>
-            <p className="modal-message">{alert.message}</p>
-
+            {/* Confetti dots — success only */}
             {alert.type === 'success' && (
-              <div className="modal-success-details">
-                <span className="modal-success-chip">✓ Recorded in database</span>
-                <span className="modal-success-chip">✓ Leaderboard updated</span>
+              <div className="modal-confetti" aria-hidden="true">
+                {[...Array(12)].map((_, i) => (
+                  <span key={i} className={`confetti-dot confetti-dot--${i}`} />
+                ))}
               </div>
             )}
 
-            <button className={`modal-btn ${alert.type}`} onClick={() => setAlert(null)}>
+            {/* Animated ring + icon */}
+            <div className={`modal-ring modal-ring--${alert.type}`}>
+              <div className="modal-ring-inner">
+                {alert.type === 'success' ? (
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : alert.type === 'error' ? (
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                ) : (
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                )}
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="modal-title">
+              {alert.type === 'success' ? 'Score Submitted!' : alert.type === 'error' ? 'Submission Failed' : 'Note'}
+            </h3>
+
+            {/* Message */}
+            <p className="modal-message">{alert.message}</p>
+
+            {/* Success detail chips */}
+            {alert.type === 'success' && (
+              <div className="modal-chips">
+                <span className="modal-chip modal-chip--green">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Recorded in DB
+                </span>
+                <span className="modal-chip modal-chip--blue">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Score saved
+                </span>
+              </div>
+            )}
+
+            {/* Action button */}
+            <button className={`modal-action modal-action--${alert.type}`} onClick={() => setAlert(null)}>
               {alert.type === 'success' ? 'Done' : 'Dismiss'}
             </button>
+
           </div>
         </div>
       )}
