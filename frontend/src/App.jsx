@@ -208,6 +208,7 @@ export default function App() {
   const resetFormFields = () => {
     setSelectedHouse('');
     setSelectedTeam('');
+    setSelectedJury('');
     setScores({});
     setComments('');
   };
@@ -524,25 +525,8 @@ export default function App() {
 
             {/* Title */}
             <h3 className="modal-title">
-              {alert.type === 'success' ? 'Score Submitted!' : alert.type === 'error' ? 'Submission Failed' : 'Note'}
+              {alert.type === 'success' ? 'Score Submitted' : alert.type === 'error' ? 'Submission Failed' : 'Note'}
             </h3>
-
-            {/* Message */}
-            <p className="modal-message">{alert.message}</p>
-
-            {/* Success detail chips */}
-            {alert.type === 'success' && (
-              <div className="modal-chips">
-                <span className="modal-chip modal-chip--green">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Recorded in DB
-                </span>
-                <span className="modal-chip modal-chip--blue">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Score saved
-                </span>
-              </div>
-            )}
 
             {/* Action button */}
             <button className={`modal-action modal-action--${alert.type}`} onClick={() => setAlert(null)}>
