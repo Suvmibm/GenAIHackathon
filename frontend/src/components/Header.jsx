@@ -1,6 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-export default function Header({ onInstall, showInstall }) {
+export default function Header({ onInstall, showInstall, user, onLogout }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const badgeRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (badgeRef.current && !badgeRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <header className="app-header">
 
@@ -17,46 +30,129 @@ export default function Header({ onInstall, showInstall }) {
         <p className="tech-subtitle">Powered by <strong>IBM Consulting Advantage</strong></p>
       </div>
 
-      {/* Action triggers like PWA Download */}
-      {showInstall && (
-        <button 
-          onClick={onInstall}
-          className="download-app-btn"
-          style={{
-            background: 'linear-gradient(135deg, var(--brand-red) 0%, #ff5252 100%)',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '20px',
-            padding: '0.45rem 1.1rem',
-            fontSize: '0.85rem',
-            fontWeight: '700',
-            cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(230, 0, 0, 0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-            marginLeft: '1rem',
-            outline: 'none',
-            fontFamily: 'var(--font-heading)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 6px 15px rgba(230, 0, 0, 0.35)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 10px rgba(230, 0, 0, 0.25)';
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          <span className="download-text">Download App</span>
-        </button>
-      )}
+      {/* Actions and Triggers on Right */}
+      <div className="header-actions-group">
+        {user && (
+          <div 
+            ref={badgeRef}
+            className="header-user-badge" 
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{ border: 'none', background: 'none', padding: 0, position: 'relative', cursor: 'pointer' }}
+          >
+            <div className="header-user-avatar" style={{ width: '36px', height: '36px', fontSize: '0.85rem', fontWeight: 800 }}>
+              {(() => {
+                const parts = user.name.trim().split(/\s+/);
+                if (parts.length >= 2) {
+                  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+                }
+                return user.name.substring(0, Math.min(2, user.name.length)).toUpperCase();
+              })()}
+            </div>
+
+            {/* Dropdown Menu Overlay */}
+            {menuOpen && (
+              <div className="header-user-dropdown" onClick={(e) => e.stopPropagation()}>
+                <div className="header-user-dropdown-name">{user.name}</div>
+                <div className="header-user-dropdown-divider"></div>
+                <button 
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onLogout();
+                  }} 
+                  className="header-dropdown-logout-btn"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Superadmin-Only Result Page Trigger */}
+        {user && user.role === 'superadmin' && (
+          <button 
+            onClick={() => window.open('/resultVIIBM8651', '_blank')}
+            className="download-app-btn"
+            style={{
+              background: 'linear-gradient(135deg, var(--brand-blue) 0%, #3b82f6 100%)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '20px',
+              padding: '0.45rem 1.1rem',
+              fontSize: '0.85rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 4px 10px rgba(15, 98, 254, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              outline: 'none',
+              fontFamily: 'var(--font-heading)',
+              marginLeft: '0.5rem'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 6px 15px rgba(15, 98, 254, 0.35)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 10px rgba(15, 98, 254, 0.25)';
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            <span>Detailed Results</span>
+          </button>
+        )}
+
+        {showInstall && (
+          <button 
+            onClick={onInstall}
+            className="download-app-btn"
+            style={{
+              background: 'linear-gradient(135deg, var(--brand-red) 0%, #ff5252 100%)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '20px',
+              padding: '0.45rem 1.1rem',
+              fontSize: '0.85rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 4px 10px rgba(230, 0, 0, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              outline: 'none',
+              fontFamily: 'var(--font-heading)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 6px 15px rgba(230, 0, 0, 0.35)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 10px rgba(230, 0, 0, 0.25)';
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span className="download-text">Download App</span>
+          </button>
+        )}
+      </div>
 
       {/* Official IBM 8-Bar blue logo replica */}
       <div className="brand-logo-container ibm-logo-wrapper">
@@ -67,4 +163,5 @@ export default function Header({ onInstall, showInstall }) {
     </header>
   );
 }
+
 

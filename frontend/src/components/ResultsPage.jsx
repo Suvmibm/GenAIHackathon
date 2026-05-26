@@ -44,7 +44,26 @@ export default function ResultsPage() {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    // Protect `/resultVIIBM8651` — only accessible by logged-in Superadmin
+    const savedSession = localStorage.getItem('jury_session');
+    if (!savedSession) {
+      window.location.href = '/';
+      return;
+    }
+    try {
+      const parsedUser = JSON.parse(savedSession);
+      if (parsedUser.role !== 'superadmin') {
+        window.location.href = '/';
+        return;
+      }
+    } catch (err) {
+      window.location.href = '/';
+      return;
+    }
+
+    fetchData();
+  }, []);
 
   const downloadExcel = () => {
     const wb = XLSX.utils.book_new();

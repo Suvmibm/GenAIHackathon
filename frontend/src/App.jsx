@@ -5,6 +5,7 @@ import CriteriaList from './components/CriteriaList';
 import Leaderboard from './components/Leaderboard';
 import OfflineBanner from './components/OfflineBanner';
 import SubmissionsView from './components/SubmissionsView';
+import Login from './components/Login';
 
 // Offline-only fallback — used ONLY when API is unreachable AND device is offline
 const OFFLINE_FALLBACK = {
@@ -17,8 +18,12 @@ const OFFLINE_FALLBACK = {
 const API_BASE = import.meta.env.VITE_API_URL;
 
 export default function App() {
+  // Authentication State
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   // Navigation
-  const [activeTab, setActiveTab] = useState('evaluate'); // 'evaluate' or 'leaderboard'
+  const [activeTab, setActiveTab] = useState('evaluate'); // 'evaluate', 'leaderboard', or 'submissions'
 
   // Application Data Lists — empty until DB responds
   const [houses, setHouses] = useState([]);
@@ -52,6 +57,21 @@ export default function App() {
 
   // 1. Initial Load & Listeners
   useEffect(() => {
+    // Load session from localStorage
+    const savedSession = localStorage.getItem('jury_session');
+    if (savedSession) {
+      try {
+        const parsedUser = JSON.parse(savedSession);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+        if (parsedUser.role === 'superadmin') {
+          setActiveTab('submissions');
+        }
+      } catch (err) {
+        console.warn('Failed to parse saved session:', err);
+      }
+    }
+
     // Check initial network connectivity
     setIsOffline(!navigator.onLine);
 
@@ -197,6 +217,49 @@ export default function App() {
     }
   };
 
+  // 1b. Prefill Judge / Jury Name when logged in as a normal judge
+  useEffect(() => {
+    if (user && user.role === 'jury' && juries.length > 0) {
+      const matchedJury = juries.find(j => {
+        const dbName = j.name.toLowerCase().replace(/\s+/g, '');
+        const sessionName = user.name.toLowerCase().replace(/\s+/g, '');
+        
+        return dbName === sessionName ||
+               dbName.includes(sessionName) ||
+               sessionName.includes(dbName) ||
+               (sessionName.includes('surendra') && dbName.includes('surendra'));
+      });
+      
+      if (matchedJury) {
+        setSelectedJury(matchedJury.id.toString());
+      }
+    }
+  }, [user, juries]);
+
+  // Auth Handlers
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+    localStorage.setItem('jury_session', JSON.stringify(userData));
+    if (userData.role === 'superadmin') {
+      setActiveTab('submissions');
+    } else {
+      setActiveTab('evaluate');
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('jury_session');
+    setSelectedJury('');
+    setScores({});
+    setComments('');
+    setSelectedTeam('');
+    setSelectedHouse('');
+    setActiveTab('evaluate');
+  };
+
   // Score handlers
   const handleScoreChange = (criterionId, scoreVal) => {
     setScores(prev => ({
@@ -260,17 +323,17 @@ export default function App() {
 
     // 1. Validation check
     if (!selectedJury) {
-      setAlert({ type: 'error', message: 'Evaluation failed: Please select your Jury Profile before submitting.' });
+      setAlert({ type: 'error', message: 'Please select your Judge / Jury name before submitting.' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     if (!selectedTeam) {
-      setAlert({ type: 'error', message: 'Evaluation failed: Please select the Team you are scoring.' });
+      setAlert({ type: 'error', message: 'Please select the Team you want to score.' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     if (Object.keys(scores).length < criteria.length) {
-      setAlert({ type: 'error', message: `Evaluation failed: Please provide scores for all ${criteria.length} criteria questions.` });
+      setAlert({ type: 'error', message: `Please give a star rating for all ${criteria.length} questions before submitting.` });
       return;
     }
 
@@ -322,7 +385,11 @@ export default function App() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         // Validation/Duplicate submission warning
-        setAlert({ type: 'error', message: data.message || data.error || 'Submission rejected by server.' });
+        const raw = data.message || data.error || '';
+        const friendly = raw.toLowerCase().includes('already submitted') || raw.toLowerCase().includes('duplicate')
+          ? 'You have already submitted scores for this team. Each judge can only score a team once.'
+          : raw || 'Something went wrong. Please try again.';
+        setAlert({ type: 'error', message: friendly });
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (err) {
@@ -339,10 +406,14 @@ export default function App() {
     }
   };
 
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* 1. Brand Header */}
-      <Header onInstall={handleInstallApp} showInstall={true} />
+      <Header onInstall={handleInstallApp} showInstall={true} user={user} onLogout={handleLogout} />
 
       {/* 2. Sync / Offline Warning banners */}
       <OfflineBanner isOffline={isOffline} queueLength={offlineQueue.length} />
@@ -358,8 +429,33 @@ export default function App() {
 
       {/* 3. Main Body Context */}
       <main className="app-container" style={{ flex: 1 }}>
-
-
+        
+        {/* Dynamic Tab Navigation based on User Role */}
+        {user?.role === 'superadmin' && (
+          <div className="tab-navigation" style={{ display: 'flex' }}>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'submissions' ? 'active' : ''}`}
+              onClick={() => setActiveTab('submissions')}
+            >
+              Submissions
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'evaluate' ? 'active' : ''}`}
+              onClick={() => setActiveTab('evaluate')}
+            >
+              Evaluate
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'leaderboard' ? 'active' : ''}`}
+              onClick={() => setActiveTab('leaderboard')}
+            >
+              Leaderboard
+            </button>
+          </div>
+        )}
 
         {metadataLoading && (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
@@ -371,117 +467,141 @@ export default function App() {
         )}
 
         {!metadataLoading && (
-          <form onSubmit={handleSubmit}>
-            {/* PWA Install Banner — desktop only, hidden on mobile */}
-            <div
-              className="card pwa-banner pwa-install-banner pwa-form-banner"
-              style={{
-                background: 'linear-gradient(135deg, #1c1c1e 0%, #2a2a2e 100%)',
-                color: '#ffffff',
-                padding: '1.25rem 1.75rem',
-                borderRadius: '16px',
-                marginBottom: '1.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '0.75rem',
-                borderLeft: '5px solid var(--brand-red)',
-                boxShadow: 'var(--shadow-md)'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: 1, minWidth: 0 }}>
+          <>
+            {/* View 1: Superadmin Submissions View */}
+            {activeTab === 'submissions' && user?.role === 'superadmin' && (
+              <SubmissionsView 
+                houses={houses} 
+                teams={teams} 
+                juries={juries} 
+              />
+            )}
+
+            {/* View 2: Scoring Sheet Form */}
+            {activeTab === 'evaluate' && (
+              <form onSubmit={handleSubmit}>
+                {/* PWA Install Banner — desktop only, hidden on mobile */}
                 <div
+                  className="card pwa-banner pwa-install-banner pwa-form-banner"
                   style={{
-                    backgroundColor: 'rgba(230, 0, 0, 0.15)',
-                    borderRadius: '10px',
-                    width: '40px',
-                    height: '40px',
+                    background: 'linear-gradient(135deg, #1c1c1e 0%, #2a2a2e 100%)',
+                    color: '#ffffff',
+                    padding: '1.25rem 1.75rem',
+                    borderRadius: '16px',
+                    marginBottom: '1.5rem',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    border: '1px solid rgba(230, 0, 0, 0.3)'
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '0.75rem',
+                    borderLeft: '5px solid var(--brand-red)',
+                    boxShadow: 'var(--shadow-md)'
                   }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-red)" strokeWidth="2.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        backgroundColor: 'rgba(230, 0, 0, 0.15)',
+                        borderRadius: '10px',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        border: '1px solid rgba(230, 0, 0, 0.3)'
+                      }}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-red)" strokeWidth="2.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, margin: 0, letterSpacing: '0.2px' }}>
+                        Download Official Evaluation App
+                      </h3>
+                      <p className="pwa-banner-desc" style={{ fontSize: '0.82rem', color: '#a0a0a5', margin: '2px 0 0 0', lineHeight: 1.4 }}>
+                        Install as a PWA for offline scoring and faster load times.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleInstallApp}
+                    className="btn pwa-install-btn"
+                    style={{
+                      backgroundColor: 'var(--brand-red)',
+                      color: '#ffffff',
+                      padding: '0.55rem 1.25rem',
+                      fontSize: '0.85rem',
+                      fontWeight: '700',
+                      borderRadius: '10px',
+                      boxShadow: '0 4px 10px rgba(230, 0, 0, 0.3)',
+                      transition: 'all 0.2s ease',
+                      border: 'none',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      width: 'auto'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--brand-red-hover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--brand-red)'}
+                  >
+                    Install App
+                  </button>
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, margin: 0, letterSpacing: '0.2px' }}>
-                    Download Official Evaluation App
-                  </h3>
-                  <p className="pwa-banner-desc" style={{ fontSize: '0.82rem', color: '#a0a0a5', margin: '2px 0 0 0', lineHeight: 1.4 }}>
-                    Install as a PWA for offline scoring and faster load times.
-                  </p>
+
+                {/* Top Selector dropdown card */}
+                <SelectionCard
+                  houses={houses}
+                  selectedHouse={selectedHouse}
+                  setSelectedHouse={setSelectedHouse}
+                  teams={teams}
+                  selectedTeam={selectedTeam}
+                  setSelectedTeam={setSelectedTeam}
+                  juries={juries}
+                  selectedJury={selectedJury}
+                  setSelectedJury={setSelectedJury}
+                  disabledJury={user?.role === 'jury'}
+                />
+
+                <CriteriaList
+                  criteria={criteria}
+                  selectedScores={scores}
+                  onScoreChange={handleScoreChange}
+                />
+
+                {/* Submission triggers */}
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="btn btn-dark"
+                    onClick={handleResetForm}
+                    disabled={loading}
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loading}
+                  >
+                    {loading ? 'Submitting...' : 'Submit'}
+                  </button>
                 </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleInstallApp}
-                className="btn pwa-install-btn"
-                style={{
-                  backgroundColor: 'var(--brand-red)',
-                  color: '#ffffff',
-                  padding: '0.55rem 1.25rem',
-                  fontSize: '0.85rem',
-                  fontWeight: '700',
-                  borderRadius: '10px',
-                  boxShadow: '0 4px 10px rgba(230, 0, 0, 0.3)',
-                  transition: 'all 0.2s ease',
-                  border: 'none',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  width: 'auto'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--brand-red-hover)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--brand-red)'}
-              >
-                Install App
-              </button>
-            </div>
+              </form>
+            )}
 
-            {/* Top Selector dropdown card */}
-            <SelectionCard
-              houses={houses}
-              selectedHouse={selectedHouse}
-              setSelectedHouse={setSelectedHouse}
-              teams={teams}
-              selectedTeam={selectedTeam}
-              setSelectedTeam={setSelectedTeam}
-              juries={juries}
-              selectedJury={selectedJury}
-              setSelectedJury={setSelectedJury}
-            />
-
-            <CriteriaList
-              criteria={criteria}
-              selectedScores={scores}
-              onScoreChange={handleScoreChange}
-            />
-
-            {/* Submission triggers */}
-            <div className="button-row">
-              <button
-                type="button"
-                className="btn btn-dark"
-                onClick={handleResetForm}
-                disabled={loading}
-              >
-                Clear
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={loading}
-              >
-                {loading ? 'Submitting...' : 'Submit'}
-              </button>
-            </div>
-          </form>
+            {/* View 3: Leaderboard Interactive Analytics */}
+            {activeTab === 'leaderboard' && user?.role === 'superadmin' && (
+              <Leaderboard 
+                standings={standings} 
+                onRefresh={fetchLeaderboard} 
+                loading={loading} 
+              />
+            )}
+          </>
         )}
       </main>
 
@@ -525,7 +645,7 @@ export default function App() {
 
             {/* Title */}
             <h3 className="modal-title">
-              {alert.type === 'success' ? 'Score Submitted' : alert.type === 'error' ? 'Submission Failed' : 'Note'}
+              {alert.type === 'success' ? 'Score Submitted' : alert.type === 'error' ? 'Oops!' : 'Note'}
             </h3>
 
             {/* Message */}
