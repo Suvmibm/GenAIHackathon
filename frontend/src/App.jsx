@@ -223,13 +223,13 @@ export default function App() {
       const matchedJury = juries.find(j => {
         const dbName = j.name.toLowerCase().replace(/\s+/g, '');
         const sessionName = user.name.toLowerCase().replace(/\s+/g, '');
-        
+
         return dbName === sessionName ||
-               dbName.includes(sessionName) ||
-               sessionName.includes(dbName) ||
-               (sessionName.includes('surendra') && dbName.includes('surendra'));
+          dbName.includes(sessionName) ||
+          sessionName.includes(dbName) ||
+          (sessionName.includes('surendra') && dbName.includes('surendra'));
       });
-      
+
       if (matchedJury) {
         setSelectedJury(matchedJury.id.toString());
       }
@@ -271,9 +271,7 @@ export default function App() {
   const resetFormFields = () => {
     setSelectedHouse('');
     setSelectedTeam('');
-    if (!user || user.role !== 'jury') {
-      setSelectedJury('');
-    }
+    // Keep selectedJury intact so the Judge/Jury name is never cleared after submission
     setScores({});
     setComments('');
   };
@@ -431,7 +429,7 @@ export default function App() {
 
       {/* 3. Main Body Context */}
       <main className="app-container" style={{ flex: 1 }}>
-        
+
         {/* Dynamic Tab Navigation based on User Role */}
         {user?.role === 'superadmin' && (
           <div className="tab-navigation" style={{ display: 'flex' }}>
@@ -472,10 +470,10 @@ export default function App() {
           <>
             {/* View 1: Superadmin Submissions View */}
             {activeTab === 'submissions' && user?.role === 'superadmin' && (
-              <SubmissionsView 
-                houses={houses} 
-                teams={teams} 
-                juries={juries} 
+              <SubmissionsView
+                houses={houses}
+                teams={teams}
+                juries={juries}
               />
             )}
 
@@ -597,10 +595,10 @@ export default function App() {
 
             {/* View 3: Leaderboard Interactive Analytics */}
             {activeTab === 'leaderboard' && user?.role === 'superadmin' && (
-              <Leaderboard 
-                standings={standings} 
-                onRefresh={fetchLeaderboard} 
-                loading={loading} 
+              <Leaderboard
+                standings={standings}
+                onRefresh={fetchLeaderboard}
+                loading={loading}
               />
             )}
           </>
