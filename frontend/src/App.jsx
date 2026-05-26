@@ -271,7 +271,9 @@ export default function App() {
   const resetFormFields = () => {
     setSelectedHouse('');
     setSelectedTeam('');
-    setSelectedJury('');
+    if (!user || user.role !== 'jury') {
+      setSelectedJury('');
+    }
     setScores({});
     setComments('');
   };
